@@ -635,6 +635,11 @@ body,.reveal-viewport{background:var(--ml-paper)!important}
 .reveal .slides .ml-slide .ml-data .ml-cell + .ml-caption{text-align:center}
 
 .ml-math-letter{font-family:"New Computer Modern", "Cambria Math", "Times New Roman", serif;font-style:italic}
+
+.ml-home-link{position:fixed;z-index:40;top:16px;left:18px;padding:8px 12px;border:1px solid var(--ml-line);border-radius:4px;background:rgba(250,249,245,.94);color:var(--ml-blue);font:600 14px/1.2 Arial,"Helvetica Neue",sans-serif;text-decoration:none;box-shadow:0 2px 8px rgba(23,45,59,.07)}
+.ml-home-link:hover{background:#e7f0f4}
+.ml-home-link:focus-visible{outline:3px solid var(--ml-orange);outline-offset:3px}
+@media print{.ml-home-link{display:none}}
 </style>
   <style type="text/css">.reveal
 div.sourceCode
@@ -2857,6 +2862,7 @@ if(window.Reveal&&Reveal.on){Reveal.on('slidechanged',()=>panels.forEach(p=>p.dr
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
 </script>
+    <a class="ml-home-link" href="../" aria-label="Back to course home">← Course home</a>
     <script id="quarto-html-after-body" type="application/javascript">
       window.document.addEventListener("DOMContentLoaded", function (event) {
         const tabsets =  window.document.querySelectorAll(".panel-tabset-tabby")
