@@ -1801,9 +1801,9 @@ display:block!important;
 </section>
 <section id="section-14" class="slide level2">
 <h2></h2>
-<div class="ml-slide"><p class="ml-kicker">Class imbalance</p><h2>Twenty times more negatives</h2><div class="ml-demo" data-demo="imbalance"><div><canvas width="740" height="410" aria-label="Score histogram, ROC curve and precision-recall curve"></canvas><p class="ml-caption">Scores: share of + among 15 nearest training neighbors (synthetic 2D data). The 4000 negatives include the 200 of the balanced set.</p></div><div class="ml-controls"><label>Predict + from <output data-for="m">8 of 15</output><input type="range" data-key="m" min="0" max="16" value="8" step="1"></label><label>Test set<select data-key="balance"><option value="balanced">200 positive · 200 negative</option><option value="imbalanced">200 positive · 4000 negative</option></select></label><button data-action="reset">Reset</button><div class="ml-result" aria-live="polite"></div></div></div><p class="ml-under">Predict first: which curve changes when negatives become twenty times more common?</p></div>
+<div class="ml-slide"><p class="ml-kicker">Class imbalance</p><h2>Twenty times more negatives</h2><div class="ml-demo" data-demo="imbalance"><div><canvas width="740" height="410" aria-label="ROC curve and precision-recall curve"></canvas><p class="ml-caption">Scores: share of + among 15 nearest training neighbors (synthetic 2D data). The 4000 negatives include the 200 of the balanced set.</p></div><div class="ml-controls"><label>Predict + from <output data-for="m">8 of 15</output><input type="range" data-key="m" min="0" max="16" value="8" step="1"></label><label>Test set<select data-key="balance"><option value="balanced">200 positive · 200 negative</option><option value="imbalanced">200 positive · 4000 negative</option></select></label><button data-action="reset">Reset</button><div class="ml-result" aria-live="polite"></div></div></div><p class="ml-under">Predict first: which curve changes when negatives become twenty times more common?</p></div>
 <aside class="notes">
-<p>Центральная демонстрация. Модель одна и та же: kNN с k=15, обученный на синтетических данных; score — доля «+» среди соседей, поэтому всего 16 значений и ступени. Сначала двигать порог на сбалансированной выборке: точка одновременно бежит по ROC и PR, внизу гистограмма голосов (положительные вверх, отрицательные вниз, общий масштаб). Затем переключить на 4000 отрицательных: TPR и FPR при каждом пороге почти не меняются (отличие только из-за конечной выборки), поэтому ROC AUC 0.862 → 0.860. Precision падает, PR AUC 0.856 → 0.270. PR AUC здесь — average precision (ступенчатая сумма), без интерполяции. Слайдер перехватывает стрелки, пока он в фокусе.</p>
+<p>Центральная демонстрация. Модель одна и та же: kNN с k=15, обученный на синтетических данных; score — доля «+» среди соседей, поэтому всего 16 значений и ступени. Сначала двигать порог на сбалансированной выборке: точка одновременно бежит по ROC и PR, справа таблица ошибок для текущего порога. Затем переключить на 4000 отрицательных и смотреть в таблицу: TP при том же пороге не меняется, FP вырастает во много раз (при пороге 8 из 15: TP = 148 в обоих случаях, FP 40 → 687, precision 0.79 → 0.18). Рост FP не ровно 20× (17×), потому что FPR немного меняется на другой выборке отрицательных: 0.200 → 0.172. TPR и FPR при каждом пороге почти не меняются (отличие только из-за конечной выборки), поэтому ROC AUC 0.862 → 0.860. Precision падает, PR AUC 0.856 → 0.270. PR AUC здесь — average precision (ступенчатая сумма), без интерполяции. Слайдер перехватывает стрелки, пока он в фокусе.</p>
 <style type="text/css">
 span.MJX_Assistive_MathML {
 position:absolute!important;
@@ -3881,19 +3881,8 @@ demos.imbalance = root => {
     const m = +slider.value, S = select.value === 'imbalanced' ? imbalance.imbalanced : imbalance.balanced, row = S.rows[m];
     q$(root, '[data-for="m"]').textContent = `${m} of ${k}`;
     const { ctx } = setup(canvas);
-    // Histogram of vote counts: positives above the axis, negatives below (same count scale).
-    const hb = { x: 160, y: 14, w: 520, h: 110 }, mid = hb.y + hb.h / 2, maxC = Math.max(...S.hist.map(h => Math.max(h.pos, h.neg))), bw = hb.w / (k + 1);
-    txt(ctx, 'Positive votes among', 8, mid - 6, { size: 13, color: C.muted }); txt(ctx, `${k} neighbors`, 8, mid + 10, { size: 13, color: C.muted });
-    S.hist.forEach(h => {
-      const x = hb.x + h.v * bw, hp = h.pos / maxC * (hb.h / 2 - 4), hn = h.neg / maxC * (hb.h / 2 - 4), on = h.v >= m;
-      ctx.globalAlpha = on ? 1 : .35; ctx.fillStyle = C.orange; ctx.fillRect(x + 2, mid - hp, bw - 4, hp); ctx.fillStyle = C.blue; ctx.fillRect(x + 2, mid, bw - 4, hn); ctx.globalAlpha = 1;
-      txt(ctx, String(h.v), x + bw / 2, hb.y + hb.h + 14, { size: 11, color: C.muted, align: 'center' });
-    });
-    seg(ctx, hb.x, mid, hb.x + hb.w, mid, C.muted, 1);
-    const tx = hb.x + m * bw; seg(ctx, tx, hb.y - 4, tx, hb.y + hb.h + 2, C.ink, 2.5, [5, 4]);
-    txt(ctx, `+ ${S.P}`, hb.x + hb.w + 6, hb.y + 16, { size: 13, color: C.orange }); txt(ctx, `− ${S.N}`, hb.x + hb.w + 6, hb.y + hb.h - 4, { size: 13, color: C.blue });
     // ROC and PR panels.
-    const rb = { x: 110, y: 168, w: 200, h: 200 }, pb = { x: 470, y: 168, w: 200, h: 200 };
+    const rb = { x: 80, y: 40, w: 280, h: 280 }, pb = { x: 440, y: 40, w: 280, h: 280 };
     const ra = frame(ctx, rb, { xLabel: 'FPR', yLabel: 'TPR' }), pa = frame(ctx, pb, { xLabel: 'Recall', yLabel: 'Precision' });
     seg(ctx, ra.px(0), ra.py(0), ra.px(1), ra.py(1), C.gray, 1.2, [4, 4]);
     seg(ctx, pa.px(0), pa.py(S.prevalence), pa.px(1), pa.py(S.prevalence), C.gray, 1.2, [4, 4]);
